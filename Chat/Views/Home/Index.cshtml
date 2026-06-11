@@ -1,0 +1,21 @@
+﻿@{
+    ViewData["Title"] = "Home";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Добро пожаловать в Чат приложение</h1>
+
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        <p>Начните общаться в чате с другими пользователями!</p>
+        <a asp-controller="Chat" asp-action="Index" class="btn btn-primary">Перейти в чат</a>
+    }
+    else
+    {
+        <p>Пожалуйста, войдите или зарегистрируйтесь, чтобы начать использовать чат.</p>
+        <div class="mt-4">
+            <a asp-controller="Account" asp-action="Login" class="btn btn-primary mr-3">Вход</a>
+            <a asp-controller="Account" asp-action="Register" class="btn btn-secondary">Регистрация</a>
+        </div>
+    }
+</div>

@@ -1,0 +1,102 @@
+﻿@model List<User>
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Доступные пользователи</h2>
+        <div class="online-status">
+            <span class="dot online"></span>
+            <span>Вы online</span>
+        </div>
+    </div>
+
+    <div class="list-group users-list">
+        @foreach (var user in Model)
+        {
+            <a href="@Url.Action("Conversation", "Chat", new { userId = user.Id })"
+               class="list-group-item list-group-item-action user-item"
+               data-user-id="@user.Id">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="user-info">
+                        <div class="user-name">@user.DisplayName</div>
+                        <small class="text-muted user-email">@user.Email</small>
+                    </div>
+                    <div class="user-status">
+                        <span class="badge @(user.IsOnline ? "bg-success" : "bg-secondary")">
+                            @(user.IsOnline ? "Online" : $"Последний раз был(а): {user.LastOnline.ToString("g")}")
+                        </span>
+                    </div>
+                </div>
+            </a>
+        }
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .user-item {
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
+        }
+
+            .user-item:hover {
+                background-color: #f8f9fa;
+                border-left-color: #0d6efd;
+            }
+
+        .user-name {
+            font-weight: 500;
+        }
+
+        .user-email {
+            font-size: 0.8rem;
+        }
+
+        .online-status .dot {
+            height: 10px;
+            width: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 5px;
+        }
+
+        .online-status .online {
+            background-color: #28a745;
+        }
+
+        .users-list {
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        // Real-time status updates
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/chatHub")
+            .configureLogging(signalR.LogLevel.Information)
+            .build();
+
+        connection.on("UserOnlineStatusChanged", (userId, isOnline) => {
+            const badge = document.querySelector(.user-item[data-user-id="${userId}"] .badge);
+            if (badge) {
+                badge.className = isOnline ? "badge bg-success" : "badge bg-secondary";
+                badge.textContent = isOnline ? "Online" : "Offline";
+            }
+        });
+
+        connection.start()
+            .then(() => console.log("Connected to status hub"))
+            .catch(err => console.error("Connection failed: ", err));
+
+        // Highlight active conversation
+        document.querySelectorAll('.user-item').forEach(item => {
+            item.addEventListener('click', function() {
+                document.querySelectorAll('.user-item').forEach(i =>
+                    i.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+    </script>
+}
